@@ -81,3 +81,18 @@ margin-right: 10px;
 margin-bottom 0px;
 padding 0px;
 }
+.wanna_be {
+width: 700px;
+text-align: center;
+margin: 0px auto;
+margin-bottom: 30px;
+background-color: white;
+}
+.wanna_be a, p{
+font-size: 20px;
+font-weight: 700;
+}
+.wanna_be  span {
+color: black;
+font-size: 25px;
+}

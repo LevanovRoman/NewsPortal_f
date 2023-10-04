@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 
 from .views import *
 
@@ -11,4 +11,9 @@ urlpatterns = [
     path('news/<slug:post_slug>/', ShowPost.as_view(), name='post'),
     path('news/update/<slug:slug>/', UpdatePost.as_view(), name='update_post'),
     path('news/delete/<slug:slug>/', DeletePost.as_view(), name='delete_post'),
+    path('accounts/', include('allauth.urls')),
+    path('get_author/', get_author, name='upgrade'),
+    # path('login/', LoginUser.as_view(), name='login_page'),
+    # path('register/', RegisterUser.as_view(), name='register_page'),
+    # path('logout/', LogoutUser.as_view(), name='logout_page'),
 ]

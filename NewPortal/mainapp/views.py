@@ -1,11 +1,14 @@
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.models import Group
+from django.contrib.auth.views import LogoutView, LoginView
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from .models import *
-from .forms import NewsForm
+from .forms import *
 from .filters import PostFilter
-
 
 menu = [
     {'title': 'Главная', 'url_name': 'main'},
@@ -38,15 +41,15 @@ class ShowAllNews(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = menu + [
-        {'title': 'Создать новость', 'url_name': 'create_news'}]
+        if self.request.user.groups.filter(name='authors').exists():
+            context['menu'] = menu + [
+                {'title': 'Создать новость', 'url_name': 'create_news'}]
+        else:
+            context['menu'] = menu
         context['title'] = 'Новости'
         context['filterset'] = self.filterset
+        context['is_author'] = self.request.user.groups.filter(name='authors').exists()
         return context
-
-
-    # def get_queryset(self):
-    #     return Post.objects.filter(type='Nv').order_by('-time_created')
 
 
 class ShowAllArticles(ListView):
@@ -57,10 +60,14 @@ class ShowAllArticles(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu'] = menu + [
-        {'title': 'Создать статью', 'url_name': 'create_articles'}]
+        if self.request.user.groups.filter(name='authors').exists():
+            context['menu'] = menu + [
+                {'title': 'Создать статью', 'url_name': 'create_articles'}]
+        else:
+            context['menu'] = menu
         context['title'] = 'Статьи'
         context['filterset'] = self.filterset
+        context['is_author'] = self.request.user.groups.filter(name='authors').exists()
         return context
 
     def get_queryset(self):
@@ -90,7 +97,8 @@ class Category(ListView):
     template_name = 'mainapp/post-page.html'
 
 
-class CreateNews(CreateView):
+class CreateNews(PermissionRequiredMixin, CreateView):
+    permission_required = ('mainapp.add_post',)
     form_class = NewsForm
     model = Post
     template_name = 'mainapp/post-create.html'
@@ -108,7 +116,8 @@ class CreateNews(CreateView):
         return super().form_valid(form)
 
 
-class CreateArticles(CreateView):
+class CreateArticles(PermissionRequiredMixin, CreateView):
+    permission_required = ('mainapp.add_post',)
     form_class = NewsForm
     model = Post
     template_name = 'mainapp/post-create.html'
@@ -126,7 +135,8 @@ class CreateArticles(CreateView):
         return super().form_valid(form)
 
 
-class UpdatePost(UpdateView):
+class UpdatePost(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    permission_required = ('mainapp.change_post',)
     model = Post
     fields = ('author', 'title', 'text', 'category')
     template_name = 'mainapp/post-update.html'
@@ -142,7 +152,8 @@ class UpdatePost(UpdateView):
         return context
 
 
-class DeletePost(DeleteView):
+class DeletePost(PermissionRequiredMixin, DeleteView):
+    permission_required = ('mainapp.delete_post',)
     model = Post
     template_name = 'mainapp/post-delete.html'
     success_url = reverse_lazy('main')
@@ -155,6 +166,10 @@ class DeletePost(DeleteView):
         return context
 
 
-
-
-
+@login_required
+def get_author(request):
+    user = request.user
+    author_group = Group.objects.get(name='authors')
+    if not request.user.groups.filter(name='authors').exists():
+        author_group.user_set.add(user)
+    return redirect('/')

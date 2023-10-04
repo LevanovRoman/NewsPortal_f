@@ -15,6 +15,13 @@
 	{% endblock main %}
 
 {% block content %}
+<div class="wanna_be">
+	{% if is_author %}
+		<p>Привет, <span>{{ user.username }}</span>! Ждём от тебя новых постов!</p>
+	{% else %}
+		<button> <a href="{% url 'upgrade' %}"> Хочу стать автором!</a> </button>
+	{% endif %}
+</div>
 <div class="temporary">
  <div class="pagination">
 	{# Информация о предыдущих страницах #}
@@ -63,8 +70,10 @@
 				<div class="blog-date-page"><p>Текст: {{ p.text|truncatechars:20|bad_words }}</p></div>
 				<div class="blog-date-page"><p>Рейтинг: {{ p.rating }}</p></div>
 				<div class="blog-date-page"><p>Время создания: {{ p.time_created }}</p></div>
+				{% if is_author %}
 				<div><a href='{% url "update_post" slug=p.slug %}'> Редактировать пост</a></div>
 				<div><a href='{% url "delete_post" slug=p.slug %}'> Удалить пост</a></div>
+				{% endif %}
 			</div>
 		<hr>
 			{% endfor %}
